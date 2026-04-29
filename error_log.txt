@@ -1,6 +1,6 @@
-Could not locate profile picture URL in FastDL HTML
+Instagram returned 201
 
 Traceback (most recent call last):
-  File "/home/runner/work/fasdl2/fasdl2/download.py", line 45, in <module>
-    raise Exception("Could not locate profile picture URL in FastDL HTML")
-Exception: Could not locate profile picture URL in FastDL HTML
+  File "/home/runner/work/fasdl2/fasdl2/download.py", line 30, in <module>
+    raise Exception(f"Instagram returned {resp.status_code}")
+Exception: Instagram returned 201
