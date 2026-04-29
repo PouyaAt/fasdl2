@@ -39,14 +39,15 @@ jobs:
 
           echo "---- Git Status ----" > git_status.txt
           git status >> git_status.txt
-
       - name: Commit debug/output files
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-
-          git add *.txt *.html *.jpg 2>/dev/null || true
-
+      
+          echo "Branch before commit:"
+          git branch
+      
+          git add -A
           git commit -m "Workflow run for ${{ github.event.inputs.username }}" || echo "No changes"
-
-          git push
+      
+          git push origin HEAD
