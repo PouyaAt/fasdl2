@@ -23,10 +23,19 @@ try:
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
     }
 
-    resp = requests.get(api_url, headers=headers)
+    resp = requests.get(
+    api_url,
+    headers={
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Accept": "application/json",
+        "Referer": f"https://www.instagram.com/{username}/"
+    },
+    allow_redirects=True
+)
+
     log(f"Instagram response status: {resp.status_code}")
 
-    if resp.status_code != 200:
+    if resp.status_code not in (200, 302):
         raise Exception(f"Instagram returned {resp.status_code}")
 
     data = resp.json()
