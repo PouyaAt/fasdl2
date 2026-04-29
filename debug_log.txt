@@ -13,3 +13,6 @@ Saved FastDL HTML to fastdl_profile_output.html
 Username received: fcbarcelona
 Requesting Instagram JSON from: https://www.instagram.com/fcbarcelona/?__a=1&__d=dis
 Instagram response status: 201
+Username received: fcbarcelona
+Requesting Instagram JSON from: https://www.instagram.com/fcbarcelona/?__a=1&__d=dis
+Instagram response status: 201
