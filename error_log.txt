@@ -1,6 +1,5 @@
-Instagram returned 201
-
+Instagram returned 401
 Traceback (most recent call last):
-  File "/home/runner/work/fasdl2/fasdl2/download.py", line 39, in <module>
+  File "/home/runner/work/fasdl2/fasdl2/download.py", line 40, in <module>
     raise Exception(f"Instagram returned {resp.status_code}")
-Exception: Instagram returned 201
+Exception: Instagram returned 401
