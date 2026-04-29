@@ -1,60 +1,57 @@
 import os
-import traceback
-from instaloader import Instaloader, Profile
+import requests
+from bs4 import BeautifulSoup
 
 DEBUG_LOG = "debug_log.txt"
 ERROR_LOG = "error_log.txt"
 
-def log(message):
-    print(message)
+def log(msg):
+    print(msg)
     with open(DEBUG_LOG, "a", encoding="utf-8") as f:
-        f.write(message + "\n")
+        f.write(msg + "\n")
 
 try:
     username = os.getenv("IG_USERNAME")
     if not username:
-        raise Exception("IG_USERNAME environment variable is missing")
+        raise Exception("IG_USERNAME environment variable missing")
 
     username = username.strip()
     log(f"Target username: {username}")
 
-    L = Instaloader(
-        download_comments=False,
-        save_metadata=False,
-        compress_json=False,
-        download_video_thumbnails=False
-    )
+    # Public Instagram viewer that works in GitHub Actions
+    url = f"https://imginn.com/{username}/"
+    log(f"Requesting page: {url}")
 
-    profile = Profile.from_username(L.context, username)
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
-    # --------------------------
-    # Download profile picture
-    # --------------------------
-    log("Downloading profile picture...")
-    L.download_pic("profile_pic", profile.profile_pic_url, profile.profile_pic_url)
-    os.rename("profile_pic.jpg", "profile_pic.jpg")
-    log("Saved profile_pic.jpg")
+    response = requests.get(url, headers=headers, timeout=15)
 
-    # --------------------------
-    # Download recent post thumbnails
-    # --------------------------
-    log("Collecting posts...")
-    posts = list(profile.get_posts())[:5]
-    log(f"Found {len(posts)} posts to download")
+    log(f"Response status: {response.status_code}")
 
-    count = 1
-    for post in posts:
-        thumb_url = post.url  # thumbnail or main image
-        log(f"Downloading post {count}: {thumb_url}")
-        L.download_pic(f"post_{count}", thumb_url, thumb_url)
-        os.rename(f"post_{count}.jpg", f"post_{count}.jpg")
-        log(f"Saved post_{count}.jpg")
-        count += 1
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch profile page ({response.status_code})")
 
-    log("All downloads completed successfully.")
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    # Profile picture is inside meta property og:image
+    meta = soup.find("meta", property="og:image")
+    if not meta:
+        raise Exception("Could not find profile picture meta tag")
+
+    profile_pic_url = meta["content"]
+    log(f"Profile picture URL found: {profile_pic_url}")
+
+    # Download image
+    img_data = requests.get(profile_pic_url, headers=headers, timeout=15).content
+
+    with open("profile_pic.jpg", "wb") as f:
+        f.write(img_data)
+
+    log("Saved profile_pic.jpg successfully ✅")
 
 except Exception as e:
     with open(ERROR_LOG, "w", encoding="utf-8") as f:
-        f.write(str(e) + "\n")
-        f.write(traceback.format_exc())
+        f.write(str(e))
     print("ERROR — check error_log.txt")
