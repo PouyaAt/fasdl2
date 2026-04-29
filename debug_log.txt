@@ -6,3 +6,7 @@ Username received: fcbarcelona
 Requesting FastDL page: https://fastdl.app/en?url=https://www.instagram.com/fcbarcelona/
 FastDL response status: 200
 Saved FastDL HTML to fastdl_profile_output.html
+Username received: username: fcbarcelona
+Requesting FastDL page: https://fastdl.app/en?url=https://www.instagram.com/username: fcbarcelona/
+FastDL response status: 200
+Saved FastDL HTML to fastdl_profile_output.html
