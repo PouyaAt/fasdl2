@@ -1,44 +1,67 @@
-import requests, re, sys, os
+import requests
+import os
+import re
+import traceback
 
-username = os.getenv("IG_USERNAME")
-if not username:
-    print("ERROR: IG_USERNAME environment variable is missing")
-    sys.exit(1)
+DEBUG_LOG = "debug_log.txt"
+ERROR_LOG = "error_log.txt"
 
-fastdl_url = f"https://fastdl.app/en/{username}"
-print(f"Fetching: {fastdl_url}")
+def log(msg):
+    with open(DEBUG_LOG, "a", encoding="utf-8") as f:
+        f.write(msg + "\n")
+    print(msg)
 
-headers = {"User-Agent": "Mozilla/5.0"}
-resp = requests.get(fastdl_url, headers=headers)
+try:
+    username = os.getenv("IG_USERNAME")
 
-if resp.status_code != 200:
-    print(f"ERROR: FastDL responded with {resp.status_code}")
-    sys.exit(1)
+    if not username:
+        raise Exception("IG_USERNAME environment variable is missing")
 
-html = resp.text
+    log(f"Username received: {username}")
 
-# Save HTML for debugging
-with open("fastdl_output.html", "w", encoding="utf-8") as f:
-    f.write(html)
+    fastdl_url = f"https://fastdl.app/en/{username}"
+    log(f"Requesting FastDL page: {fastdl_url}")
 
-# Regex to extract profile picture from FastDL page
-match = re.search(r'src="(https://[^"]+instagram[^"]+\.jpg)"', html)
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
 
-if not match:
-    print("ERROR: Could not locate profile picture URL in FastDL HTML")
-    sys.exit(1)
+    resp = requests.get(fastdl_url, headers=headers)
 
-profile_pic_url = match.group(1)
-print("FOUND PROFILE PIC URL:", profile_pic_url)
+    log(f"FastDL response status: {resp.status_code}")
 
-# Download profile picture
-pic_resp = requests.get(profile_pic_url, headers=headers)
+    html = resp.text
 
-if pic_resp.status_code != 200:
-    print(f"ERROR: Failed to download image: {pic_resp.status_code}")
-    sys.exit(1)
+    with open("fastdl_profile_output.html", "w", encoding="utf-8") as f:
+        f.write(html)
 
-with open("profile_pic.jpg", "wb") as f:
-    f.write(pic_resp.content)
+    log("Saved FastDL HTML to fastdl_profile_output.html")
 
-print("SUCCESS: profile_pic.jpg downloaded")
+    # Try to locate instagram CDN image
+    match = re.search(r'(https://[^"]*cdninstagram[^"]+\.jpg)', html)
+
+    if not match:
+        raise Exception("Could not locate profile picture URL in FastDL HTML")
+
+    img_url = match.group(1)
+
+    log(f"Profile picture URL found: {img_url}")
+
+    img_resp = requests.get(img_url, headers=headers)
+
+    log(f"Image download status: {img_resp.status_code}")
+
+    if img_resp.status_code != 200:
+        raise Exception(f"Image request failed with {img_resp.status_code}")
+
+    with open("profile_pic.jpg", "wb") as f:
+        f.write(img_resp.content)
+
+    log("Profile picture saved as profile_pic.jpg")
+
+except Exception as e:
+    with open(ERROR_LOG, "w", encoding="utf-8") as f:
+        f.write(str(e) + "\n\n")
+        f.write(traceback.format_exc())
+
+    print("ERROR OCCURRED — see error_log.txt")
