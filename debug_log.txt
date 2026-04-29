@@ -1,0 +1,4 @@
+Username received: fcbarcelona
+Requesting FastDL page: https://fastdl.app/en/fcbarcelona
+FastDL response status: 404
+Saved FastDL HTML to fastdl_profile_output.html
