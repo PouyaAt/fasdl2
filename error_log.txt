@@ -1,8 +1,1 @@
-Profile fcbarcelona does not exist.
-Traceback (most recent call last):
-  File "/home/runner/work/fasdl2/fasdl2/download.py", line 28, in <module>
-    profile = Profile.from_username(L.context, username)
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/home/runner/.local/lib/python3.12/site-packages/instaloader/structures.py", line 919, in from_username
-    raise ProfileNotExistsException("Profile {} does not exist.".format(username))
-instaloader.exceptions.ProfileNotExistsException: Profile fcbarcelona does not exist.
+Failed to fetch profile page (403)
