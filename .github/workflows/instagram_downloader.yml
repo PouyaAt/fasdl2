@@ -1,20 +1,18 @@
-name: Instagram Downloader
+name: Instagram Downloader (Profile Pic)
 
 on:
   workflow_dispatch:
     inputs:
-      instagram_url:
-        description: "Instagram post URL"
+      username:
+        description: 'Instagram username (public) to download profile picture'
         required: true
-        type: string
 
 permissions:
   contents: write
 
 jobs:
-  download-instagram:
+  download:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -22,56 +20,27 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.x'
 
-      - name: Install requirements
-        run: pip install requests beautifulsoup4
-
-      - name: Export IG URL
-        run: echo "IG_URL=${{ github.event.inputs.instagram_url }}" >> $GITHUB_ENV
+      - name: Install dependencies
+        run: |
+          pip install requests
 
       - name: Run downloader
+        env:
+          IG_USERNAME: ${{ github.event.inputs.username }}
         run: |
-          echo "script started" > script_started.txt
-          python download.py || echo "python script failed" > error_log.txt
-          echo "SCRIPT FINISHED" > script_finished.txt
+          echo "Running downloader for username: $IG_USERNAME"
+          python download.py
 
-      - name: Workspace file list
-        run: |
-          echo "=== WORKSPACE FILES (pwd + tree) ===" > workspace_files.txt
-          pwd >> workspace_files.txt
-          echo "" >> workspace_files.txt
+          echo "--- Workspace files ---" > workspace_files.txt
           ls -lah >> workspace_files.txt
-          echo "" >> workspace_files.txt
-          echo "=== TREE ===" >> workspace_files.txt
-          find . -maxdepth 2 -type f | sort >> workspace_files.txt
-
-      - name: Git status before add
-        run: |
-          echo "=== GIT STATUS BEFORE ADD ===" > git_status.txt
-          git status >> git_status.txt
 
       - name: Commit results
         run: |
-          echo "=== START COMMIT STEP ==="
           git config user.name "github-actions"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "actions@github.com"
 
-          echo "Current ref name: ${{ github.ref_name }}"
-          git checkout ${{ github.ref_name }}
-
-          echo "Running git status before add..."
-          git status
-
-          echo "Running git add -A..."
-          git add -A
-
-          echo "Running git status after add..."
-          git status
-
-          echo "Attempting commit..."
-          git commit -m "Downloaded Instagram media via FastDL" || echo "Nothing to commit"
-
-          echo "Pushing..."
-          git push origin ${{ github.ref_name }}
-          echo "=== END COMMIT STEP ==="
+          git add fastdl_output.html profile_pic.jpg workspace_files.txt || true
+          git commit -m "Downloaded profile picture for ${{ github.event.inputs.username }}" || echo "No changes to commit"
+          git push || echo "Nothing to push"
