@@ -19,7 +19,10 @@ try:
 
     log(f"Username received: {username}")
 
-    fastdl_url = f"https://fastdl.app/en/{username}"
+    # Correct FastDL URL format
+    ig_profile = f"https://www.instagram.com/{username}/"
+    fastdl_url = f"https://fastdl.app/en?url={ig_profile}"
+
     log(f"Requesting FastDL page: {fastdl_url}")
 
     headers = {
@@ -27,28 +30,24 @@ try:
     }
 
     resp = requests.get(fastdl_url, headers=headers)
-
     log(f"FastDL response status: {resp.status_code}")
 
     html = resp.text
 
+    # Save full HTML for inspection
     with open("fastdl_profile_output.html", "w", encoding="utf-8") as f:
         f.write(html)
-
     log("Saved FastDL HTML to fastdl_profile_output.html")
 
-    # Try to locate instagram CDN image
+    # Try to locate a profile picture URL (cdninstagram jpg)
     match = re.search(r'(https://[^"]*cdninstagram[^"]+\.jpg)', html)
-
     if not match:
         raise Exception("Could not locate profile picture URL in FastDL HTML")
 
     img_url = match.group(1)
-
     log(f"Profile picture URL found: {img_url}")
 
     img_resp = requests.get(img_url, headers=headers)
-
     log(f"Image download status: {img_resp.status_code}")
 
     if img_resp.status_code != 200:
@@ -56,12 +55,10 @@ try:
 
     with open("profile_pic.jpg", "wb") as f:
         f.write(img_resp.content)
-
     log("Profile picture saved as profile_pic.jpg")
 
 except Exception as e:
     with open(ERROR_LOG, "w", encoding="utf-8") as f:
         f.write(str(e) + "\n\n")
         f.write(traceback.format_exc())
-
     print("ERROR OCCURRED — see error_log.txt")
