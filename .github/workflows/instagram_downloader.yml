@@ -10,18 +10,18 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Install Instaloader
-      run: pip install instaloader
+    - name: Install dependencies
+      run: pip install requests beautifulsoup4
 
     - name: Run downloader
       env:
         IG_USERNAME: fcbarcelona
       run: python download.py
 
-    - name: Commit results
+    - name: Commit files
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
         git add -A
-        git commit -m "Update Instagram media" || echo "Nothing to commit"
+        git commit -m "Update profile picture" || echo "Nothing to commit"
         git push
