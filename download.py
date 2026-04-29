@@ -11,79 +11,92 @@ def log(msg):
         f.write(msg + "\n")
 
 try:
+    # ----------------------------------------------------
+    # 1. Read username
+    # ----------------------------------------------------
     username = os.getenv("IG_USERNAME")
     if not username:
         raise Exception("IG_USERNAME environment variable is missing")
 
+    username = username.strip()
     log(f"Username received: {username}")
-    api_url = f"https://www.instagram.com/{username}/?__a=1&__d=dis"
+
+    # ----------------------------------------------------
+    # 2. Instagram public API endpoint
+    # ----------------------------------------------------
+    api_url = f"https://i.instagram.com/api/v1/users/web_profile_info/?username={username}"
     log(f"Requesting Instagram JSON from: {api_url}")
 
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        "User-Agent": "Instagram 155.0.0.37.107",  # mobile-style UA
+        "x-ig-app-id": "936619743392459",          # required app ID
+        "Accept": "application/json"
     }
 
-    resp = requests.get(
-    api_url,
-    headers={
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        "Accept": "application/json",
-        "Referer": f"https://www.instagram.com/{username}/"
-    },
-    allow_redirects=True
-)
-
+    resp = requests.get(api_url, headers=headers)
     log(f"Instagram response status: {resp.status_code}")
 
-    if resp.status_code not in (200, 302):
+    if resp.status_code != 200:
         raise Exception(f"Instagram returned {resp.status_code}")
 
+    # ----------------------------------------------------
+    # 3. Parse JSON
+    # ----------------------------------------------------
     data = resp.json()
 
-    # Determine user data (account structure slightly differs sometimes)
-    user = data.get("graphql", {}).get("user")
-    if not user:
-        user = data.get("data", {}).get("user")
-    if not user:
-        raise Exception("Could not locate 'user' object in JSON")
+    if "data" not in data or "user" not in data["data"]:
+        raise Exception("Invalid API response: no 'data.user' object")
 
-    # --- Profile picture ---
+    user = data["data"]["user"]
+
+    # ----------------------------------------------------
+    # 4. Download profile picture
+    # ----------------------------------------------------
     profile_url = user.get("profile_pic_url_hd") or user.get("profile_pic_url")
     if not profile_url:
         raise Exception("Profile picture URL not found in JSON")
 
     log(f"Downloading profile picture: {profile_url}")
-    img_resp = requests.get(profile_url, headers=headers)
-    if img_resp.status_code == 200:
+    r = requests.get(profile_url, headers=headers)
+
+    if r.status_code == 200:
         with open("profile_pic.jpg", "wb") as f:
-            f.write(img_resp.content)
-        log("Profile picture saved as profile_pic.jpg")
+            f.write(r.content)
+        log("Saved profile_pic.jpg")
     else:
-        raise Exception(f"Profile picture download failed: {img_resp.status_code}")
+        raise Exception(f"Profile picture download failed: {r.status_code}")
 
-    # --- Recent post thumbnails ---
+    # ----------------------------------------------------
+    # 5. Download 5 recent post thumbnails
+    # ----------------------------------------------------
     posts = user.get("edge_owner_to_timeline_media", {}).get("edges", [])
-    log(f"Found {len(posts)} posts.")
+    log(f"Found {len(posts)} posts total.")
 
-    for i, post in enumerate(posts[:5], start=1):  # download first 5
-        thumb = post.get("node", {}).get("thumbnail_src")
-        if thumb:
-            log(f"Downloading thumbnail {i}: {thumb}")
-            r = requests.get(thumb, headers=headers)
-            if r.status_code == 200:
-                fname = f"post_{i}.jpg"
-                with open(fname, "wb") as f:
-                    f.write(r.content)
-                log(f"Saved {fname}")
-            else:
-                log(f"Failed thumbnail {i} ({r.status_code})")
+    max_posts = min(5, len(posts))
+
+    for i in range(max_posts):
+        node = posts[i].get("node", {})
+        thumb_url = node.get("thumbnail_src")
+
+        if not thumb_url:
+            log(f"No thumbnail for post {i+1}, skipping")
+            continue
+
+        log(f"Downloading post {i+1}: {thumb_url}")
+        rr = requests.get(thumb_url, headers=headers)
+
+        if rr.status_code == 200:
+            fname = f"post_{i+1}.jpg"
+            with open(fname, "wb") as f:
+                f.write(rr.content)
+            log(f"Saved {fname}")
         else:
-            log(f"No thumbnail found for post {i}")
+            log(f"Failed thumbnail {i+1}: {rr.status_code}")
 
-    log("All downloads complete.")
+    log("All downloads completed successfully.")
 
 except Exception as e:
     with open(ERROR_LOG, "w", encoding="utf-8") as f:
-        f.write(str(e) + "\n\n")
+        f.write(str(e) + "\n")
         f.write(traceback.format_exc())
     print("ERROR OCCURRED — see error_log.txt")
