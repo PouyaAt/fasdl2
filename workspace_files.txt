@@ -1,0 +1,27 @@
+=== WORKSPACE FILES (pwd + tree) ===
+/home/runner/work/fasdl2/fasdl2
+
+total 36K
+drwxr-xr-x 4 runner runner 4.0K Apr 29 11:59 .
+drwxr-xr-x 3 runner runner 4.0K Apr 29 11:59 ..
+drwxr-xr-x 7 runner runner 4.0K Apr 29 11:59 .git
+drwxr-xr-x 3 runner runner 4.0K Apr 29 11:59 .github
+-rw-r--r-- 1 runner runner 2.1K Apr 29 11:59 download.py
+-rw-r--r-- 1 runner runner   21 Apr 29 11:59 error_log.txt
+-rw-r--r-- 1 runner runner   16 Apr 29 11:59 script_finished.txt
+-rw-r--r-- 1 runner runner   15 Apr 29 11:59 script_started.txt
+-rw-r--r-- 1 runner runner   70 Apr 29 11:59 workspace_files.txt
+
+=== TREE ===
+./.git/FETCH_HEAD
+./.git/HEAD
+./.git/config
+./.git/config.worktree
+./.git/description
+./.git/index
+./.git/shallow
+./download.py
+./error_log.txt
+./script_finished.txt
+./script_started.txt
+./workspace_files.txt
